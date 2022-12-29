@@ -22,7 +22,7 @@ class ONLINETOOLBOX_API UOTSessionMenu : public UUserWidget
 	GENERATED_BODY()
 public:
 	UFUNCTION(BlueprintCallable)
-	void MenuSetup();
+	void MenuSetup(const bool ShouldAddToViewport=true, const bool ShouldBeVisible=true, const bool ShouldSetInputModeToUIOnly=true, const bool ShowMouseCursor=true);
 
 protected:
 	UFUNCTION(BlueprintCallable)
