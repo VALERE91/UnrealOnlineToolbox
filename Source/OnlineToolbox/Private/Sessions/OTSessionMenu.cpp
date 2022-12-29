@@ -34,14 +34,22 @@ void UOTSessionMenu::MenuSetup()
 	}
 }
 
-void UOTSessionMenu::HostSession(const FString& Lobby,
+void UOTSessionMenu::HostSession(const TSoftObjectPtr<UWorld> LobbyLevel,
 	int32 NumPublicConnection /*= 4*/,
 	const FString& MatchType /*= "FreeForAll"*/)
 {
 	if(!ensureMsgf(OTSessionsSubsystem != nullptr,
 		TEXT("Multiplayer Session Subsystem is not set. Did you call MenuSetup?"))) return;
 
-	LobbyMap = Lobby;
+	//
+	// Get the full path of the soft reference of the level
+	// something like : /Game/Levels/Lobbies/LVL_Lobby.LVL_Lobby
+	// Then remove the extension and save it to LobbyMap
+	//
+	LobbyLevel.ToSoftObjectPath().ToString().Split(FString("."),&LobbyMap, nullptr );
+
+	UE_LOG(LogTemp,Error,TEXT("%s"), *LobbyMap);
+	
 	OTSessionsSubsystem->CreateSession(NumPublicConnection, MatchType);
 }
 

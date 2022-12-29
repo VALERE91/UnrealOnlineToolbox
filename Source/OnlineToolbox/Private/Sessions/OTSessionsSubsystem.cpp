@@ -87,7 +87,7 @@ void UOTSessionsSubsystem::FindSessions(int32 MaxSearchResults, const FString& M
 	if(!ensureMsgf(SessionInterface.IsValid(), TEXT("Unable to get the Session Interface"))) return;
 
 	//Register the delegate for when the find session complete and store its handle for later removal
-	FindSessionsCompleteDelegateeHandle = SessionInterface->AddOnFindSessionsCompleteDelegate_Handle(FindSessionsCompleteDelegate);
+	FindSessionsCompleteDelegateHandle = SessionInterface->AddOnFindSessionsCompleteDelegate_Handle(FindSessionsCompleteDelegate);
 	
 	LastSessionSearch = MakeShareable(new FOnlineSessionSearch());
 	LastSessionSearch->MaxSearchResults = MaxSearchResults;
@@ -99,7 +99,7 @@ void UOTSessionsSubsystem::FindSessions(int32 MaxSearchResults, const FString& M
 	const bool success = SessionInterface->FindSessions(*LocalPLayer->GetPreferredUniqueNetId(), LastSessionSearch.ToSharedRef());
 	if(!success)
 	{
-		SessionInterface->ClearOnFindSessionsCompleteDelegate_Handle(FindSessionsCompleteDelegateeHandle);
+		SessionInterface->ClearOnFindSessionsCompleteDelegate_Handle(FindSessionsCompleteDelegateHandle);
 		TArray<FOTSessionSearchResult> Results;
 		ToolboxOnFindSessionComplete.Broadcast(Results, false);
 	}
@@ -110,14 +110,14 @@ void UOTSessionsSubsystem::JoinSession(const FOTSessionSearchResult& SessionResu
 	if(!ensureMsgf(SessionInterface.IsValid(), TEXT("Unable to get the Session Interface"))) return;
 
 	//Register the delegate for when the join session complete and store its handle for later removal
-	JoinSessionCompleteDelegateeHandle = SessionInterface->AddOnJoinSessionCompleteDelegate_Handle(JoinSessionCompleteDelegate);
+	JoinSessionCompleteDelegateHandle = SessionInterface->AddOnJoinSessionCompleteDelegate_Handle(JoinSessionCompleteDelegate);
 	
 	//Get the local player because create session need the creator Unique Net ID
 	const ULocalPlayer* LocalPLayer = GetWorld()->GetFirstLocalPlayerFromController();
 	const bool success = SessionInterface->JoinSession(*LocalPLayer->GetPreferredUniqueNetId(), NAME_GameSession, SessionResult.Native);
 	if(!success)
 	{
-		SessionInterface->ClearOnJoinSessionCompleteDelegate_Handle(JoinSessionCompleteDelegateeHandle);
+		SessionInterface->ClearOnJoinSessionCompleteDelegate_Handle(JoinSessionCompleteDelegateHandle);
 		ToolboxOnJoinSessionComplete.Broadcast(false, EOTJoinSessionResultType::UnknownError, "");
 	}
 }
@@ -175,7 +175,7 @@ void UOTSessionsSubsystem::OnFindSessionComplete(bool bWasSuccessful)
 	if(SessionInterface)
 	{
 		//Remove the join session completion delegate
-		SessionInterface->ClearOnFindSessionsCompleteDelegate_Handle(FindSessionsCompleteDelegateeHandle);
+		SessionInterface->ClearOnFindSessionsCompleteDelegate_Handle(FindSessionsCompleteDelegateHandle);
 	}
 
 	if(!LastSessionSearch.IsValid() || LastSessionSearch->SearchResults.Num() <= 0)
@@ -204,7 +204,7 @@ void UOTSessionsSubsystem::OnJoinSessionComplete(FName SessionName, EOnJoinSessi
 	if(SessionInterface)
 	{
 		//Remove the join session completion delegate
-		SessionInterface->ClearOnJoinSessionCompleteDelegate_Handle(JoinSessionCompleteDelegateeHandle);
+		SessionInterface->ClearOnJoinSessionCompleteDelegate_Handle(JoinSessionCompleteDelegateHandle);
 	}
 	else
 	{

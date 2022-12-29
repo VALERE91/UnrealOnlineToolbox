@@ -14,8 +14,7 @@
 // Declaring custom delegates
 //
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FToolboxOnCreateSessionComplete, bool, bWasSuccessful);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FToolboxOnFindSessionComplete, const TArray<FOTSessionSearchResult>&, SessionResults,
-																			bool, bWasSuccessful);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FToolboxOnFindSessionComplete, const TArray<FOTSessionSearchResult>&, SessionResults, bool, bWasSuccessful);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FToolboxOnJoinSessionComplete, bool, bWasSuccessful, EOTJoinSessionResultType, Type, const FString&, Address);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FToolboxOnDestroySessionComplete, bool, bWasSuccessful);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FToolboxOnStartSessionComplete, bool, bWasSuccessful);
@@ -112,10 +111,10 @@ private:
 	FDelegateHandle CreateSessionCompleteDelegateHandle;
 	
 	FOnFindSessionsCompleteDelegate FindSessionsCompleteDelegate;
-	FDelegateHandle FindSessionsCompleteDelegateeHandle;
+	FDelegateHandle FindSessionsCompleteDelegateHandle;
 	
 	FOnJoinSessionCompleteDelegate JoinSessionCompleteDelegate;
-	FDelegateHandle JoinSessionCompleteDelegateeHandle;
+	FDelegateHandle JoinSessionCompleteDelegateHandle;
 	
 	FOnDestroySessionCompleteDelegate DestroySessionCompleteDelegate;
 	FDelegateHandle DestroySessionCompleteDelegateHandle;

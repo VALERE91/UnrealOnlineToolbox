@@ -26,7 +26,7 @@ public:
 
 protected:
 	UFUNCTION(BlueprintCallable)
-	void HostSession(const FString& Lobby, int32 NumPublicConnection = 4, const FString& MatchType = "FreeForAll");
+	void HostSession(const TSoftObjectPtr<UWorld> LobbyLevel, int32 NumPublicConnection = 4, const FString& MatchType = "FreeForAll");
 
 	UFUNCTION(BlueprintCallable)
 	void FindSession(int32 MaxSessionNumber = 10, const FString& MatchType = "FreeForAll");
