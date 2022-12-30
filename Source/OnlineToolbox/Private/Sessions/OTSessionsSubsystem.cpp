@@ -30,7 +30,7 @@ void UOTSessionsSubsystem::Deinitialize()
 	Super::Deinitialize();
 }
 
-void UOTSessionsSubsystem::CreateSession(int32 NumPublicConnections, const FString& MatchType)
+void UOTSessionsSubsystem::CreateSession(int32 NumConnections, const FString& MatchType, const FString& SessionName,const bool bIsPrivate, const FString & Password)
 {
 	if(!ensureMsgf(SessionInterface.IsValid(), TEXT("Unable to get the Session Interface"))) return;
 
@@ -39,8 +39,11 @@ void UOTSessionsSubsystem::CreateSession(int32 NumPublicConnections, const FStri
 	if(ExistingSession != nullptr)
 	{
 		bCreateSessionOnDestroy = true;
-		LastNumPublicConnections = NumPublicConnections;
+		LastNumPublicConnections = NumConnections;
 		LastMatchType = MatchType;
+		LastSessionName = SessionName;
+		bLastSessionIsPrivate = bIsPrivate;
+		LastSessionPassword = Password;
 		DestroySession();
 		return;
 	}
@@ -54,13 +57,16 @@ void UOTSessionsSubsystem::CreateSession(int32 NumPublicConnections, const FStri
 	
 	//If we are using the NULL subsystem it is a LAN match. Otherwise it is an online match
 	LastSessionSettings->bIsLANMatch = IOnlineSubsystem::Get()->GetSubsystemName() == "NULL";
-	LastSessionSettings->NumPublicConnections = NumPublicConnections;
+	LastSessionSettings->NumPublicConnections = NumConnections;
 	LastSessionSettings->bUseLobbiesIfAvailable = true;
 	LastSessionSettings->bAllowJoinInProgress = true;
 	LastSessionSettings->bAllowJoinViaPresence = true;
 	LastSessionSettings->bShouldAdvertise = true;
 	LastSessionSettings->bUsesPresence = true;
 	LastSessionSettings->Set(FName("MatchType"), MatchType, EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);
+	LastSessionSettings->Set(FName("IsPrivate"),bIsPrivate,EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);
+	LastSessionSettings->Set(FName("Password"),Password,EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);
+	LastSessionSettings->Set(FName("SessionName"),SessionName,EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);
 
 #if !UE_BUILD_SHIPPING
 	//Enforce a specific Build ID in not shipping so we can
@@ -256,7 +262,7 @@ void UOTSessionsSubsystem::OnDestroySessionComplete(FName SessionName, bool bWas
 
 	if(!bWasSuccessful || !bCreateSessionOnDestroy) return;
 
-	CreateSession(LastNumPublicConnections, LastMatchType);
+	CreateSession(LastNumPublicConnections, LastMatchType, LastSessionName, bLastSessionIsPrivate, LastSessionPassword);
 }
 
 void UOTSessionsSubsystem::OnStartSessionComplete(FName SessionName, bool bWasSuccessful)

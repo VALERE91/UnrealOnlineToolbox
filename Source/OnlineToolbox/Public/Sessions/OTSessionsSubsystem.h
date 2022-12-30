@@ -37,10 +37,13 @@ public:
 	/**
 	 * @brief 
 	 * @param NumPublicConnections 
-	 * @param MatchType 
+	 * @param MatchType
+	 * @param SessionName
+	 * @param bIsPrivate
+	 * @param Password
 	 */
 	UFUNCTION(BlueprintCallable)
-	void CreateSession(int32 NumPublicConnections, const FString& MatchType);
+	void CreateSession(int32 NumConnections, const FString& MatchType, const FString& SessionName,const bool bIsPrivate = false, const FString & Password = "");
 
 	/**
 	 * @brief 
@@ -100,6 +103,11 @@ private:
 	bool bCreateSessionOnDestroy {false};
 	int32 LastNumPublicConnections;
 	FString LastMatchType;
+	FString LastSessionName;
+	bool bLastSessionIsPrivate;
+	FString LastSessionPassword;
+	
+	
 	
 	TSharedPtr<FOnlineSessionSettings> LastSessionSettings;
 	TSharedPtr<FOnlineSessionSearch> LastSessionSearch;

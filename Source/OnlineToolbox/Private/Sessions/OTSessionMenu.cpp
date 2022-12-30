@@ -52,9 +52,28 @@ void UOTSessionMenu::MenuSetup(const bool ShouldAddToViewport,const bool ShouldB
 	
 }
 
+void UOTSessionMenu::GetSessionInformations(const FOTSessionSearchResult& Session, int32& SessionPing,
+	int32& NumberOfConnectedPlayers, int32& MaxConnectedPlayers, FString& SessionName, FString& SessionId,
+	bool& bIsPrivate, FString& SessionPassword)
+{
+	const auto SessionSettings = Session.Session.SessionSettings;
+	
+	SessionPing = Session.PingInMs;
+	MaxConnectedPlayers = SessionSettings.NumPublicConnections;
+	NumberOfConnectedPlayers = MaxConnectedPlayers - Session.Session.NumOpenPublicConnections;
+	
+	SessionId = Session.Session.GetSessionIdStr();
+	SessionSettings.Get(FName("IsPrivate"),bIsPrivate);
+	SessionSettings.Get(FName("SessionName"),SessionName);
+	SessionSettings.Get(FName("Password"),SessionPassword);
+}
+
 void UOTSessionMenu::HostSession(const TSoftObjectPtr<UWorld> LobbyLevel,
 	int32 NumPublicConnection /*= 4*/,
-	const FString& MatchType /*= "FreeForAll"*/)
+	const FString& MatchType /*= "FreeForAll"*/,
+	const FString& SessionName,
+	const bool bIsPrivate /*= false*/,
+	const FString& Password)
 {
 	if(!ensureMsgf(OTSessionsSubsystem != nullptr,
 		TEXT("Multiplayer Session Subsystem is not set. Did you call MenuSetup?"))) return;
@@ -68,7 +87,7 @@ void UOTSessionMenu::HostSession(const TSoftObjectPtr<UWorld> LobbyLevel,
 
 	//UE_LOG(LogTemp,Display,TEXT("%s"), *LobbyMap);
 	
-	OTSessionsSubsystem->CreateSession(NumPublicConnection, MatchType);
+	OTSessionsSubsystem->CreateSession(NumPublicConnection, MatchType, SessionName, bIsPrivate, Password);
 }
 
 void UOTSessionMenu::FindSession(int32 MaxSessionNumber, const FString& MatchType)
