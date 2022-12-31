@@ -26,10 +26,6 @@ public:
 
 protected:
 	UFUNCTION(BlueprintCallable)
-	void GetSessionInformations(const FOTSessionSearchResult& Session, int32& SessionPing, int32& NumberOfConnectedPlayers, int32& MaxConnectedPlayers,
-				   FString& SessionName, FString& SessionId, bool& bIsPrivate, FString& SessionPassword);
-	
-	UFUNCTION(BlueprintCallable)
 	void HostSession(const TSoftObjectPtr<UWorld> LobbyLevel, int32 NumPublicConnection = 4, const FString& MatchType = "FreeForAll",const FString& SessionName = "", const bool bIsPrivate = false,const FString& Password = "");
 
 	UFUNCTION(BlueprintCallable)

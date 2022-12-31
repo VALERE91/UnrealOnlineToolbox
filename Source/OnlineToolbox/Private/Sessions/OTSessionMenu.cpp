@@ -52,21 +52,6 @@ void UOTSessionMenu::MenuSetup(const bool ShouldAddToViewport,const bool ShouldB
 	
 }
 
-void UOTSessionMenu::GetSessionInformations(const FOTSessionSearchResult& Session, int32& SessionPing,
-	int32& NumberOfConnectedPlayers, int32& MaxConnectedPlayers, FString& SessionName, FString& SessionId,
-	bool& bIsPrivate, FString& SessionPassword)
-{
-	const auto SessionSettings = Session.Session.SessionSettings;
-	
-	SessionPing = Session.PingInMs;
-	MaxConnectedPlayers = SessionSettings.NumPublicConnections;
-	NumberOfConnectedPlayers = MaxConnectedPlayers - Session.Session.NumOpenPublicConnections;
-	
-	SessionId = Session.Session.GetSessionIdStr();
-	SessionSettings.Get(FName("IsPrivate"),bIsPrivate);
-	SessionSettings.Get(FName("SessionName"),SessionName);
-	SessionSettings.Get(FName("Password"),SessionPassword);
-}
 
 void UOTSessionMenu::HostSession(const TSoftObjectPtr<UWorld> LobbyLevel,
 	int32 NumPublicConnection /*= 4*/,

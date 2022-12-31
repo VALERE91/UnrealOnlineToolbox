@@ -97,6 +97,13 @@ protected:
 	void OnJoinSessionComplete(FName SessionName, EOnJoinSessionCompleteResult::Type Result);
 	void OnDestroySessionComplete(FName SessionName, bool bWasSuccessful);
 	void OnStartSessionComplete(FName SessionName, bool bWasSuccessful);
+
+	//
+	// Helpers
+	//
+	UFUNCTION(BlueprintCallable)
+	void GetSessionInformations(const FOTSessionSearchResult& Session, int32& SessionPing, int32& NumberOfConnectedPlayers, int32& MaxConnectedPlayers,
+				   FString& SessionName, FString& SessionId, bool& bIsPrivate, FString& SessionPassword);
 private:
 	IOnlineSessionPtr SessionInterface;
 

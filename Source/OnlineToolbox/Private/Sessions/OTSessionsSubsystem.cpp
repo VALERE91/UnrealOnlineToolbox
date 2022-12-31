@@ -275,3 +275,19 @@ void UOTSessionsSubsystem::OnStartSessionComplete(FName SessionName, bool bWasSu
 	
 	ToolboxOnStartSessionComplete.Broadcast(bWasSuccessful);
 }
+
+void UOTSessionsSubsystem::GetSessionInformations(const FOTSessionSearchResult& Session, int32& SessionPing,
+	int32& NumberOfConnectedPlayers, int32& MaxConnectedPlayers, FString& SessionName, FString& SessionId,
+	bool& bIsPrivate, FString& SessionPassword)
+{
+	const auto SessionSettings = Session.Session.SessionSettings;
+	
+	SessionPing = Session.PingInMs;
+	MaxConnectedPlayers = SessionSettings.NumPublicConnections;
+	NumberOfConnectedPlayers = MaxConnectedPlayers - Session.Session.NumOpenPublicConnections;
+	
+	SessionId = Session.Session.GetSessionIdStr();
+	SessionSettings.Get(FName("IsPrivate"),bIsPrivate);
+	SessionSettings.Get(FName("SessionName"),SessionName);
+	SessionSettings.Get(FName("Password"),SessionPassword);
+}
