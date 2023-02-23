@@ -14,8 +14,7 @@
 // Declaring custom delegates
 //
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FToolboxOnCreateSessionComplete, bool, bWasSuccessful);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FToolboxOnFindSessionComplete, const TArray<FOTSessionSearchResult>&, SessionResults,
-																			bool, bWasSuccessful);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FToolboxOnFindSessionComplete, const TArray<FOTSessionSearchResult>&, SessionResults, bool, bWasSuccessful);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FToolboxOnJoinSessionComplete, bool, bWasSuccessful, EOTJoinSessionResultType, Type, const FString&, Address);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FToolboxOnDestroySessionComplete, bool, bWasSuccessful);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FToolboxOnStartSessionComplete, bool, bWasSuccessful);
@@ -38,10 +37,13 @@ public:
 	/**
 	 * @brief 
 	 * @param NumPublicConnections 
-	 * @param MatchType 
+	 * @param MatchType
+	 * @param SessionName
+	 * @param bIsPrivate
+	 * @param Password
 	 */
 	UFUNCTION(BlueprintCallable)
-	void CreateSession(int32 NumPublicConnections, const FString& MatchType);
+	void CreateSession(int32 NumConnections, const FString& MatchType, const FString& SessionName,const bool bIsPrivate = false, const FString & Password = "");
 
 	/**
 	 * @brief 
@@ -95,12 +97,24 @@ protected:
 	void OnJoinSessionComplete(FName SessionName, EOnJoinSessionCompleteResult::Type Result);
 	void OnDestroySessionComplete(FName SessionName, bool bWasSuccessful);
 	void OnStartSessionComplete(FName SessionName, bool bWasSuccessful);
+
+	//
+	// Helpers
+	//
+	UFUNCTION(BlueprintCallable)
+	void GetSessionInformations(const FOTSessionSearchResult& Session, int32& SessionPing, int32& NumberOfConnectedPlayers, int32& MaxConnectedPlayers,
+				   FString& SessionName, FString& SessionId, bool& bIsPrivate, FString& SessionPassword);
 private:
 	IOnlineSessionPtr SessionInterface;
 
 	bool bCreateSessionOnDestroy {false};
 	int32 LastNumPublicConnections;
 	FString LastMatchType;
+	FString LastSessionName;
+	bool bLastSessionIsPrivate;
+	FString LastSessionPassword;
+	
+	
 	
 	TSharedPtr<FOnlineSessionSettings> LastSessionSettings;
 	TSharedPtr<FOnlineSessionSearch> LastSessionSearch;
@@ -112,10 +126,10 @@ private:
 	FDelegateHandle CreateSessionCompleteDelegateHandle;
 	
 	FOnFindSessionsCompleteDelegate FindSessionsCompleteDelegate;
-	FDelegateHandle FindSessionsCompleteDelegateeHandle;
+	FDelegateHandle FindSessionsCompleteDelegateHandle;
 	
 	FOnJoinSessionCompleteDelegate JoinSessionCompleteDelegate;
-	FDelegateHandle JoinSessionCompleteDelegateeHandle;
+	FDelegateHandle JoinSessionCompleteDelegateHandle;
 	
 	FOnDestroySessionCompleteDelegate DestroySessionCompleteDelegate;
 	FDelegateHandle DestroySessionCompleteDelegateHandle;

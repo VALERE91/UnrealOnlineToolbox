@@ -30,7 +30,7 @@ void UOTSessionsSubsystem::Deinitialize()
 	Super::Deinitialize();
 }
 
-void UOTSessionsSubsystem::CreateSession(int32 NumPublicConnections, const FString& MatchType)
+void UOTSessionsSubsystem::CreateSession(int32 NumConnections, const FString& MatchType, const FString& SessionName,const bool bIsPrivate, const FString & Password)
 {
 	if(!ensureMsgf(SessionInterface.IsValid(), TEXT("Unable to get the Session Interface"))) return;
 
@@ -39,8 +39,11 @@ void UOTSessionsSubsystem::CreateSession(int32 NumPublicConnections, const FStri
 	if(ExistingSession != nullptr)
 	{
 		bCreateSessionOnDestroy = true;
-		LastNumPublicConnections = NumPublicConnections;
+		LastNumPublicConnections = NumConnections;
 		LastMatchType = MatchType;
+		LastSessionName = SessionName;
+		bLastSessionIsPrivate = bIsPrivate;
+		LastSessionPassword = Password;
 		DestroySession();
 		return;
 	}
@@ -54,13 +57,16 @@ void UOTSessionsSubsystem::CreateSession(int32 NumPublicConnections, const FStri
 	
 	//If we are using the NULL subsystem it is a LAN match. Otherwise it is an online match
 	LastSessionSettings->bIsLANMatch = IOnlineSubsystem::Get()->GetSubsystemName() == "NULL";
-	LastSessionSettings->NumPublicConnections = NumPublicConnections;
+	LastSessionSettings->NumPublicConnections = NumConnections;
 	LastSessionSettings->bUseLobbiesIfAvailable = true;
 	LastSessionSettings->bAllowJoinInProgress = true;
 	LastSessionSettings->bAllowJoinViaPresence = true;
 	LastSessionSettings->bShouldAdvertise = true;
 	LastSessionSettings->bUsesPresence = true;
 	LastSessionSettings->Set(FName("MatchType"), MatchType, EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);
+	LastSessionSettings->Set(FName("IsPrivate"),bIsPrivate,EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);
+	LastSessionSettings->Set(FName("Password"),Password,EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);
+	LastSessionSettings->Set(FName("SessionName"),SessionName,EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);
 
 #if !UE_BUILD_SHIPPING
 	//Enforce a specific Build ID in not shipping so we can
@@ -87,7 +93,7 @@ void UOTSessionsSubsystem::FindSessions(int32 MaxSearchResults, const FString& M
 	if(!ensureMsgf(SessionInterface.IsValid(), TEXT("Unable to get the Session Interface"))) return;
 
 	//Register the delegate for when the find session complete and store its handle for later removal
-	FindSessionsCompleteDelegateeHandle = SessionInterface->AddOnFindSessionsCompleteDelegate_Handle(FindSessionsCompleteDelegate);
+	FindSessionsCompleteDelegateHandle = SessionInterface->AddOnFindSessionsCompleteDelegate_Handle(FindSessionsCompleteDelegate);
 	
 	LastSessionSearch = MakeShareable(new FOnlineSessionSearch());
 	LastSessionSearch->MaxSearchResults = MaxSearchResults;
@@ -99,7 +105,7 @@ void UOTSessionsSubsystem::FindSessions(int32 MaxSearchResults, const FString& M
 	const bool success = SessionInterface->FindSessions(*LocalPLayer->GetPreferredUniqueNetId(), LastSessionSearch.ToSharedRef());
 	if(!success)
 	{
-		SessionInterface->ClearOnFindSessionsCompleteDelegate_Handle(FindSessionsCompleteDelegateeHandle);
+		SessionInterface->ClearOnFindSessionsCompleteDelegate_Handle(FindSessionsCompleteDelegateHandle);
 		TArray<FOTSessionSearchResult> Results;
 		ToolboxOnFindSessionComplete.Broadcast(Results, false);
 	}
@@ -110,14 +116,14 @@ void UOTSessionsSubsystem::JoinSession(const FOTSessionSearchResult& SessionResu
 	if(!ensureMsgf(SessionInterface.IsValid(), TEXT("Unable to get the Session Interface"))) return;
 
 	//Register the delegate for when the join session complete and store its handle for later removal
-	JoinSessionCompleteDelegateeHandle = SessionInterface->AddOnJoinSessionCompleteDelegate_Handle(JoinSessionCompleteDelegate);
+	JoinSessionCompleteDelegateHandle = SessionInterface->AddOnJoinSessionCompleteDelegate_Handle(JoinSessionCompleteDelegate);
 	
 	//Get the local player because create session need the creator Unique Net ID
 	const ULocalPlayer* LocalPLayer = GetWorld()->GetFirstLocalPlayerFromController();
 	const bool success = SessionInterface->JoinSession(*LocalPLayer->GetPreferredUniqueNetId(), NAME_GameSession, SessionResult.Native);
 	if(!success)
 	{
-		SessionInterface->ClearOnJoinSessionCompleteDelegate_Handle(JoinSessionCompleteDelegateeHandle);
+		SessionInterface->ClearOnJoinSessionCompleteDelegate_Handle(JoinSessionCompleteDelegateHandle);
 		ToolboxOnJoinSessionComplete.Broadcast(false, EOTJoinSessionResultType::UnknownError, "");
 	}
 }
@@ -175,7 +181,7 @@ void UOTSessionsSubsystem::OnFindSessionComplete(bool bWasSuccessful)
 	if(SessionInterface)
 	{
 		//Remove the join session completion delegate
-		SessionInterface->ClearOnFindSessionsCompleteDelegate_Handle(FindSessionsCompleteDelegateeHandle);
+		SessionInterface->ClearOnFindSessionsCompleteDelegate_Handle(FindSessionsCompleteDelegateHandle);
 	}
 
 	if(!LastSessionSearch.IsValid() || LastSessionSearch->SearchResults.Num() <= 0)
@@ -204,7 +210,7 @@ void UOTSessionsSubsystem::OnJoinSessionComplete(FName SessionName, EOnJoinSessi
 	if(SessionInterface)
 	{
 		//Remove the join session completion delegate
-		SessionInterface->ClearOnJoinSessionCompleteDelegate_Handle(JoinSessionCompleteDelegateeHandle);
+		SessionInterface->ClearOnJoinSessionCompleteDelegate_Handle(JoinSessionCompleteDelegateHandle);
 	}
 	else
 	{
@@ -256,7 +262,7 @@ void UOTSessionsSubsystem::OnDestroySessionComplete(FName SessionName, bool bWas
 
 	if(!bWasSuccessful || !bCreateSessionOnDestroy) return;
 
-	CreateSession(LastNumPublicConnections, LastMatchType);
+	CreateSession(LastNumPublicConnections, LastMatchType, LastSessionName, bLastSessionIsPrivate, LastSessionPassword);
 }
 
 void UOTSessionsSubsystem::OnStartSessionComplete(FName SessionName, bool bWasSuccessful)
@@ -268,4 +274,20 @@ void UOTSessionsSubsystem::OnStartSessionComplete(FName SessionName, bool bWasSu
 	}
 	
 	ToolboxOnStartSessionComplete.Broadcast(bWasSuccessful);
+}
+
+void UOTSessionsSubsystem::GetSessionInformations(const FOTSessionSearchResult& Session, int32& SessionPing,
+	int32& NumberOfConnectedPlayers, int32& MaxConnectedPlayers, FString& SessionName, FString& SessionId,
+	bool& bIsPrivate, FString& SessionPassword)
+{
+	const auto SessionSettings = Session.Session.SessionSettings;
+	
+	SessionPing = Session.PingInMs;
+	MaxConnectedPlayers = SessionSettings.NumPublicConnections;
+	NumberOfConnectedPlayers = MaxConnectedPlayers - Session.Session.NumOpenPublicConnections;
+	
+	SessionId = Session.Session.GetSessionIdStr();
+	SessionSettings.Get(FName("IsPrivate"),bIsPrivate);
+	SessionSettings.Get(FName("SessionName"),SessionName);
+	SessionSettings.Get(FName("Password"),SessionPassword);
 }

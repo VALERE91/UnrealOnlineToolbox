@@ -22,11 +22,11 @@ class ONLINETOOLBOX_API UOTSessionMenu : public UUserWidget
 	GENERATED_BODY()
 public:
 	UFUNCTION(BlueprintCallable)
-	void MenuSetup();
+	void MenuSetup(const bool ShouldAddToViewport=true, const bool ShouldBeVisible=true, const bool ShouldSetInputModeToUIOnly=true, const bool ShowMouseCursor=true);
 
 protected:
 	UFUNCTION(BlueprintCallable)
-	void HostSession(const FString& Lobby, int32 NumPublicConnection = 4, const FString& MatchType = "FreeForAll");
+	void HostSession(const TSoftObjectPtr<UWorld> LobbyLevel, int32 NumPublicConnection = 4, const FString& MatchType = "FreeForAll",const FString& SessionName = "", const bool bIsPrivate = false,const FString& Password = "");
 
 	UFUNCTION(BlueprintCallable)
 	void FindSession(int32 MaxSessionNumber = 10, const FString& MatchType = "FreeForAll");
